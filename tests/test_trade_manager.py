@@ -112,8 +112,13 @@ class TradeManagerTestCase(unittest.TestCase):
         msg = """BUY GOLD🍀🍀
 13 08 SL 01 (Round 2)
 TP 25 48"""
-        for century_base, market_bid in ((3800.0, 3825.0), (3900.0, 3925.0), (4000.0, 4025.0)):
-            with self.subTest(century=int(century_base // 100)):
+        for century_base, market_bid in (
+            (3800.0, 3895.0),
+            (3800.0, 3825.0),
+            (3900.0, 3925.0),
+            (4000.0, 4025.0),
+        ):
+            with self.subTest(century=int(century_base // 100), market_bid=market_bid):
                 service, gateway, _events = _create_test_service(initial_bid=market_bid)
                 results = service.process_message(msg, now=1000.0)
                 self.assertEqual(len(results), 1)

@@ -28,6 +28,23 @@ TP 92 15"""
 class CopierGUI:
     """Desktop GUI for Phase 1: Signal Textbox Input, Preview, MT5 Limit Execution & Trade Monitoring."""
 
+    # Sleek Dark Trader Terminal Palette
+    BG_ROOT = "#0b0f19"
+    BG_PANEL = "#111827"
+    BG_INPUT = "#090d16"
+    BG_BUTTON = "#1e293b"
+    BG_BUTTON_HOVER = "#334155"
+    FG_PRIMARY = "#e2e8f0"
+    FG_MUTED = "#94a3b8"
+    ACCENT_CYAN = "#38bdf8"
+    ACCENT_GOLD = "#fbbf24"
+    ACCENT_GREEN = "#10b981"
+    ACCENT_GREEN_HOVER = "#059669"
+    ACCENT_BLUE = "#0284c7"
+    ACCENT_BLUE_HOVER = "#0369a1"
+    ACCENT_RED = "#e11d48"
+    ACCENT_RED_HOVER = "#be123c"
+
     def __init__(
         self,
         root: tk.Tk,
@@ -39,17 +56,192 @@ class CopierGUI:
         self.service = service
         self.gateway = gateway
         self.config_path = config_path
+        self._after_id: str | None = None
 
-        self.root.title("MT5 Signal Copier - Giai đoạn 1 (Signal Textbox -> MT5 Limit & Auto BE)")
-        self.root.geometry("1120x780")
-        self.root.minsize(980, 680)
+        self.root.title("MT5 SIGNAL COPIER PRO — TERMINAL GIAO DỊCH TỰ ĐỘNG")
+        self.root.geometry("1160x760")
+        self.root.minsize(1000, 660)
+        self.root.configure(bg=self.BG_ROOT)
 
+        self._configure_trader_theme()
         self._init_variables()
         self._build_layout()
         self.service.subscribe(self._on_app_event)
 
         self._refresh_connection_status()
         self._schedule_background_loop()
+
+    def _configure_trader_theme(self) -> None:
+        style = ttk.Style(self.root)
+        if "clam" in style.theme_names():
+            style.theme_use("clam")
+
+        style.configure(".", background=self.BG_PANEL, foreground=self.FG_PRIMARY, font=("Segoe UI", 9))
+        style.configure("TFrame", background=self.BG_PANEL)
+        style.configure("Root.TFrame", background=self.BG_ROOT)
+        style.configure("TPanedwindow", background=self.BG_ROOT)
+
+        style.configure(
+            "TLabelframe",
+            background=self.BG_PANEL,
+            foreground=self.ACCENT_CYAN,
+            bordercolor="#1e293b",
+            lightcolor="#1e293b",
+            darkcolor="#1e293b",
+            borderwidth=1,
+        )
+        style.configure(
+            "TLabelframe.Label",
+            background=self.BG_PANEL,
+            foreground=self.ACCENT_CYAN,
+            font=("Segoe UI", 9, "bold"),
+        )
+
+        style.configure("TLabel", background=self.BG_PANEL, foreground=self.FG_PRIMARY)
+        style.configure("Muted.TLabel", background=self.BG_PANEL, foreground=self.FG_MUTED)
+        style.configure(
+            "Ticker.TLabel",
+            background="#090d16",
+            foreground="#34d399",
+            font=("Consolas", 10, "bold"),
+            padding=(8, 3),
+        )
+        style.configure(
+            "Status.TLabel",
+            background=self.BG_PANEL,
+            foreground=self.ACCENT_CYAN,
+            font=("Segoe UI", 9, "bold"),
+        )
+
+        style.configure(
+            "TEntry",
+            fieldbackground=self.BG_INPUT,
+            foreground="#f8fafc",
+            insertcolor=self.ACCENT_CYAN,
+            bordercolor="#334155",
+            lightcolor="#334155",
+            darkcolor="#334155",
+            padding=4,
+        )
+        style.configure(
+            "TCombobox",
+            fieldbackground=self.BG_INPUT,
+            background=self.BG_BUTTON,
+            foreground="#f8fafc",
+            arrowcolor=self.ACCENT_CYAN,
+            padding=3,
+        )
+        style.map(
+            "TCombobox",
+            fieldbackground=[("readonly", self.BG_INPUT)],
+            foreground=[("readonly", "#f8fafc")],
+            selectbackground=[("readonly", self.BG_INPUT)],
+            selectforeground=[("readonly", self.ACCENT_CYAN)],
+        )
+
+        style.configure(
+            "DryRun.TCheckbutton",
+            background=self.BG_PANEL,
+            foreground=self.ACCENT_GOLD,
+            indicatorbackground=self.BG_INPUT,
+            indicatorforeground=self.ACCENT_GOLD,
+            font=("Segoe UI", 9, "bold"),
+            padding=(4, 2),
+        )
+        style.map(
+            "DryRun.TCheckbutton",
+            background=[("active", self.BG_PANEL)],
+            foreground=[("active", "#fde047")],
+        )
+
+        # Trader Action Buttons
+        style.configure(
+            "Secondary.TButton",
+            background=self.BG_BUTTON,
+            foreground=self.FG_PRIMARY,
+            bordercolor="#334155",
+            focusthickness=0,
+            font=("Segoe UI", 9, "bold"),
+            padding=(10, 4),
+        )
+        style.map(
+            "Secondary.TButton",
+            background=[("active", self.BG_BUTTON_HOVER), ("pressed", "#475569")],
+            foreground=[("active", "#ffffff")],
+        )
+
+        style.configure(
+            "Accent.TButton",
+            background=self.ACCENT_BLUE,
+            foreground="#ffffff",
+            bordercolor=self.ACCENT_BLUE,
+            focusthickness=0,
+            font=("Segoe UI", 9, "bold"),
+            padding=(10, 4),
+        )
+        style.map(
+            "Accent.TButton",
+            background=[("active", self.ACCENT_BLUE_HOVER), ("pressed", "#075985")],
+            foreground=[("active", "#ffffff")],
+        )
+
+        style.configure(
+            "Execute.TButton",
+            background=self.ACCENT_GREEN,
+            foreground="#ffffff",
+            bordercolor=self.ACCENT_GREEN,
+            focusthickness=0,
+            font=("Segoe UI", 10, "bold"),
+            padding=(12, 6),
+        )
+        style.map(
+            "Execute.TButton",
+            background=[("active", self.ACCENT_GREEN_HOVER), ("pressed", "#047857")],
+            foreground=[("active", "#ffffff")],
+        )
+
+        style.configure(
+            "Danger.TButton",
+            background=self.ACCENT_RED,
+            foreground="#ffffff",
+            bordercolor=self.ACCENT_RED,
+            focusthickness=0,
+            font=("Segoe UI", 9, "bold"),
+            padding=(10, 4),
+        )
+        style.map(
+            "Danger.TButton",
+            background=[("active", self.ACCENT_RED_HOVER), ("pressed", "#9f1239")],
+            foreground=[("active", "#ffffff")],
+        )
+
+        # Treeview Trader Table
+        style.configure(
+            "Treeview",
+            background=self.BG_INPUT,
+            fieldbackground=self.BG_INPUT,
+            foreground=self.FG_PRIMARY,
+            rowheight=25,
+            bordercolor="#1e293b",
+            font=("Consolas", 9),
+        )
+        style.configure(
+            "Treeview.Heading",
+            background="#1e293b",
+            foreground=self.ACCENT_CYAN,
+            relief="flat",
+            font=("Segoe UI", 9, "bold"),
+            padding=(4, 5),
+        )
+        style.map(
+            "Treeview.Heading",
+            background=[("active", "#334155")],
+        )
+        style.map(
+            "Treeview",
+            background=[("selected", "#1d4ed8")],
+            foreground=[("selected", "#ffffff")],
+        )
 
     def _init_variables(self) -> None:
         cfg = self.service.config
@@ -65,175 +257,244 @@ class CopierGUI:
         self.var_market_price = tk.StringVar(value="Bid: -- | Ask: --")
 
     def _build_layout(self) -> None:
-        main_frame = ttk.Frame(self.root, padding=10)
+        main_frame = ttk.Frame(self.root, style="Root.TFrame", padding=10)
         main_frame.pack(fill=tk.BOTH, expand=True)
 
-        # 1. Top Status & Settings Panel
+        # 1. Top Status & Settings Panel (3 Sleek Rows, DRY-RUN in CAPITAL CASE on Row 1)
         settings_box = ttk.LabelFrame(
-            main_frame, text="1. Cấu hình Chiến lược & Kết nối MT5", padding=8
+            main_frame, text="⚡ 1. CẤU HÌNH CHIẾN LƯỢC & KẾT NỐI MT5", padding=(10, 6)
         )
         settings_box.pack(fill=tk.X, pady=(0, 8))
 
+        # Row 1: DRY-RUN (CAPITAL CASE) on top + Reconnect + Live Market Price & Status
         row1 = ttk.Frame(settings_box)
-        row1.pack(fill=tk.X, pady=2)
+        row1.pack(fill=tk.X, pady=(2, 4))
 
-        ttk.Label(row1, text="Mã GOLD sàn MT5:").pack(side=tk.LEFT)
-        ttk.Entry(row1, textvariable=self.var_symbol, width=10).pack(side=tk.LEFT, padx=(4, 12))
-
-        ttk.Label(row1, text="Vol mỗi lệnh (Lot):").pack(side=tk.LEFT)
-        ttk.Entry(row1, textvariable=self.var_lot, width=7).pack(side=tk.LEFT, padx=(4, 12))
-
-        ttk.Label(row1, text="Vào sớm (Offset giá):").pack(side=tk.LEFT)
-        ttk.Entry(row1, textvariable=self.var_offset, width=6).pack(side=tk.LEFT, padx=(4, 12))
-
-        ttk.Label(row1, text="Chế độ TP:").pack(side=tk.LEFT)
-        tp_combo = ttk.Combobox(
+        self.chk_dry_run = ttk.Checkbutton(
             row1,
-            textvariable=self.var_tp_mode,
-            values=[m.value for m in TPMode],
-            width=8,
-            state="readonly",
+            text="CHẾ ĐỘ GIẢ LẬP (DRY-RUN - KHÔNG GỬI LỆNH THẬT)",
+            variable=self.var_dry_run,
+            command=self._on_toggle_dry_run,
+            style="DryRun.TCheckbutton",
         )
-        tp_combo.pack(side=tk.LEFT, padx=(4, 12))
+        self.chk_dry_run.pack(side=tk.LEFT, padx=(0, 12))
 
-        ttk.Label(row1, text="Dời SL Hòa vốn (+giá):").pack(side=tk.LEFT)
-        ttk.Entry(row1, textvariable=self.var_be_price, width=6).pack(side=tk.LEFT, padx=(4, 12))
+        ttk.Button(
+            row1,
+            text="⟳ KẾT NỐI LẠI MT5",
+            command=self._refresh_connection_status,
+            style="Secondary.TButton",
+        ).pack(side=tk.LEFT, padx=4)
 
-        ttk.Label(row1, text="Hủy lệnh chờ (giờ):").pack(side=tk.LEFT)
-        ttk.Entry(row1, textvariable=self.var_expiry_hours, width=6).pack(
+        ttk.Label(
+            row1, textvariable=self.var_market_price, style="Ticker.TLabel"
+        ).pack(side=tk.RIGHT, padx=(8, 0))
+        ttk.Label(
+            row1, textvariable=self.var_status, style="Status.TLabel"
+        ).pack(side=tk.RIGHT, padx=8)
+
+        # Row 2: Core Strategy Parameters + Save Config Button
+        row2 = ttk.Frame(settings_box)
+        row2.pack(fill=tk.X, pady=4)
+
+        ttk.Label(row2, text="SYMBOL MT5:", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(row2, textvariable=self.var_symbol, width=9, font=("Consolas", 9, "bold")).pack(
             side=tk.LEFT, padx=(4, 12)
         )
 
-        ttk.Button(row1, text="Lưu Cấu hình", command=self._on_save_config).pack(
-            side=tk.RIGHT, padx=4
+        ttk.Label(row2, text="VOL (LOT):", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(row2, textvariable=self.var_lot, width=6, font=("Consolas", 9, "bold")).pack(
+            side=tk.LEFT, padx=(4, 12)
         )
 
-        row2 = ttk.Frame(settings_box)
-        row2.pack(fill=tk.X, pady=(6, 2))
+        ttk.Label(row2, text="OFFSET VÀO SỚM:", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(row2, textvariable=self.var_offset, width=5, font=("Consolas", 9, "bold")).pack(
+            side=tk.LEFT, padx=(4, 12)
+        )
 
-        ttk.Checkbutton(
+        ttk.Label(row2, text="CHẾ ĐỘ TP:", style="Muted.TLabel").pack(side=tk.LEFT)
+        tp_combo = ttk.Combobox(
             row2,
-            text="Chế độ Giả lập (Dry-Run - Không gửi lệnh thật)",
-            variable=self.var_dry_run,
-            command=self._on_toggle_dry_run,
-        ).pack(side=tk.LEFT, padx=(0, 14))
+            textvariable=self.var_tp_mode,
+            values=[m.value for m in TPMode],
+            width=7,
+            state="readonly",
+            font=("Consolas", 9, "bold"),
+        )
+        tp_combo.pack(side=tk.LEFT, padx=(4, 12))
 
-        ttk.Label(row2, text="Giá Bid giả lập (Dry-Run):").pack(side=tk.LEFT)
-        ttk.Entry(row2, textvariable=self.var_sim_bid, width=9).pack(side=tk.LEFT, padx=4)
+        ttk.Label(row2, text="BE (+GIÁ):", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(row2, textvariable=self.var_be_price, width=5, font=("Consolas", 9, "bold")).pack(
+            side=tk.LEFT, padx=(4, 12)
+        )
+
+        ttk.Label(row2, text="HỦY CHỜ (GIỜ):", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(
+            row2, textvariable=self.var_expiry_hours, width=5, font=("Consolas", 9, "bold")
+        ).pack(side=tk.LEFT, padx=(4, 12))
+
         ttk.Button(
-            row2, text="Cập nhật giá giả lập", command=self._on_update_simulated_price
-        ).pack(side=tk.LEFT, padx=(2, 14))
+            row2,
+            text="💾 LƯU CẤU HÌNH",
+            command=self._on_save_config,
+            style="Accent.TButton",
+        ).pack(side=tk.RIGHT, padx=2)
 
-        ttk.Button(row2, text="Kết nối lại MT5", command=self._refresh_connection_status).pack(
-            side=tk.LEFT
+        # Row 3: Dry-Run Price Simulator & Expiry Test Controls
+        row3 = ttk.Frame(settings_box)
+        row3.pack(fill=tk.X, pady=(4, 2))
+
+        ttk.Label(row3, text="GIÁ BID GIẢ LẬP (DRY-RUN):", style="Muted.TLabel").pack(side=tk.LEFT)
+        ttk.Entry(row3, textvariable=self.var_sim_bid, width=9, font=("Consolas", 9, "bold")).pack(
+            side=tk.LEFT, padx=(6, 8)
         )
+        ttk.Button(
+            row3,
+            text="⚡ CẬP NHẬT GIÁ GIẢ LẬP",
+            command=self._on_update_simulated_price,
+            style="Secondary.TButton",
+        ).pack(side=tk.LEFT, padx=(0, 12))
 
-        ttk.Label(
-            row2, textvariable=self.var_market_price, font=("Segoe UI", 10, "bold")
-        ).pack(side=tk.RIGHT, padx=8)
-        ttk.Label(row2, textvariable=self.var_status, foreground="#0055aa").pack(
-            side=tk.RIGHT, padx=8
-        )
+        ttk.Button(
+            row3,
+            text="⏱ GIẢ LẬP TRÔI QUA 4 GIỜ (TEST TỰ HỦY)",
+            command=self._on_simulate_four_hours_elapsed,
+            style="Secondary.TButton",
+        ).pack(side=tk.RIGHT, padx=2)
 
-        # 2. Middle Split: Left = Signal Input Textbox, Right = Active Orders & Positions
+        self.config_rows = (row1, row2, row3)
+
+        # 2. Middle Split: Left = Compact Signal Input Textbox, Right = Active Orders & Positions
         middle_pane = ttk.PanedWindow(main_frame, orient=tk.HORIZONTAL)
         middle_pane.pack(fill=tk.BOTH, expand=True, pady=(0, 8))
 
         left_box = ttk.LabelFrame(
-            middle_pane, text="2. Nhập Tin nhắn Tín hiệu (Signal Textbox)", padding=8
+            middle_pane, text="📡 2. TÍN HIỆU (SIGNAL INPUT)", padding=8
         )
-        middle_pane.add(left_box, weight=2)
+        middle_pane.add(left_box, weight=1)
 
         self.txt_signal = scrolledtext.ScrolledText(
-            left_box, height=11, font=("Consolas", 11), wrap=tk.WORD
+            left_box,
+            width=32,
+            height=6,
+            font=("Consolas", 10),
+            wrap=tk.WORD,
+            bg=self.BG_INPUT,
+            fg="#f8fafc",
+            insertbackground=self.ACCENT_CYAN,
+            selectbackground="#1d4ed8",
+            relief=tk.FLAT,
+            padx=6,
+            pady=6,
         )
         self.txt_signal.pack(fill=tk.BOTH, expand=True, pady=(0, 6))
         self.txt_signal.insert(tk.END, DEFAULT_SAMPLE_SIGNAL)
 
-        btn_bar = ttk.Frame(left_box)
-        btn_bar.pack(fill=tk.X)
+        btn_bar_top = ttk.Frame(left_box)
+        btn_bar_top.pack(fill=tk.X, pady=(0, 4))
 
-        ttk.Button(btn_bar, text="Điền mẫu thử", command=self._on_fill_sample).pack(
-            side=tk.LEFT, padx=(0, 4)
-        )
-        ttk.Button(btn_bar, text="Xóa trắng", command=self._on_clear_input).pack(
-            side=tk.LEFT, padx=(0, 10)
-        )
         ttk.Button(
-            btn_bar,
-            text="1. Xem trước (Preview Parse)",
+            btn_bar_top,
+            text="Mẫu thử",
+            command=self._on_fill_sample,
+            style="Secondary.TButton",
+        ).pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(
+            btn_bar_top,
+            text="Xóa",
+            command=self._on_clear_input,
+            style="Secondary.TButton",
+        ).pack(side=tk.LEFT, padx=(0, 4))
+        ttk.Button(
+            btn_bar_top,
+            text="🔍 1. XEM TRƯỚC (PREVIEW)",
             command=self._on_preview_signal,
-        ).pack(side=tk.LEFT, padx=4)
+            style="Accent.TButton",
+        ).pack(side=tk.RIGHT, fill=tk.X, expand=True)
+
+        btn_bar_bottom = ttk.Frame(left_box)
+        btn_bar_bottom.pack(fill=tk.X)
         ttk.Button(
-            btn_bar,
-            text="2. ĐẶT LỆNH LIMIT VÀO MT5",
+            btn_bar_bottom,
+            text="🚀 2. ĐẶT LỆNH LIMIT VÀO MT5",
             command=self._on_execute_signal,
-        ).pack(side=tk.RIGHT, padx=4)
+            style="Execute.TButton",
+        ).pack(fill=tk.X, expand=True)
 
         right_box = ttk.LabelFrame(
             middle_pane,
-            text="3. Lệnh Chờ Limit & Vị thế Đang Mở (Tự động dời SL +6 giá & Hủy sau 4h)",
+            text="📊 3. LỆNH CHỜ LIMIT & VỊ THẾ ĐANG MỞ (AUTO BE +6 GIÁ & HỦY SAU 4H)",
             padding=8,
         )
         middle_pane.add(right_box, weight=3)
 
         columns = ("ticket", "kind", "symbol", "side", "vol", "price", "sl", "tp", "note")
         self.tree_orders = ttk.Treeview(
-            right_box, columns=columns, show="headings", height=10
+            right_box, columns=columns, show="headings", height=7
         )
         headers = {
-            "ticket": ("Ticket", 70),
-            "kind": ("Trạng thái", 85),
-            "symbol": ("Symbol", 75),
-            "side": ("Chiều", 55),
-            "vol": ("Lot", 55),
-            "price": ("Giá Vào/Limit", 95),
+            "ticket": ("TICKET", 70),
+            "kind": ("TRẠNG THÁI", 90),
+            "symbol": ("SYMBOL", 75),
+            "side": ("CHIỀU", 60),
+            "vol": ("LOT", 55),
+            "price": ("GIÁ VÀO/LIMIT", 100),
             "sl": ("SL", 80),
             "tp": ("TP", 80),
-            "note": ("Ghi chú", 130),
+            "note": ("GHI CHÚ", 140),
         }
         for col, (label, width) in headers.items():
             self.tree_orders.heading(col, text=label)
             self.tree_orders.column(col, width=width, anchor=tk.CENTER)
+        self.tree_orders.tag_configure("BUY", foreground="#34d399")
+        self.tree_orders.tag_configure("SELL", foreground="#f87171")
         self.tree_orders.pack(fill=tk.BOTH, expand=True, pady=(0, 6))
 
         order_btn_bar = ttk.Frame(right_box)
         order_btn_bar.pack(fill=tk.X)
         ttk.Button(
             order_btn_bar,
-            text="Làm mới danh sách",
+            text="⟳ LÀM MỚI DANH SÁCH",
             command=self._refresh_orders_table,
+            style="Secondary.TButton",
         ).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(
             order_btn_bar,
-            text="Xóa lệnh đã chọn",
+            text="✖ XÓA LỆNH ĐÃ CHỌN",
             command=self._on_delete_selected_orders,
+            style="Danger.TButton",
         ).pack(side=tk.LEFT, padx=(0, 6))
         ttk.Button(
             order_btn_bar,
-            text="Xóa tất cả lệnh",
+            text="🗑 XÓA TẤT CẢ LỆNH",
             command=self._on_delete_all_orders,
+            style="Danger.TButton",
         ).pack(side=tk.LEFT, padx=(0, 6))
-        ttk.Button(
-            order_btn_bar,
-            text="Giả lập trôi qua 4 giờ (Test tự hủy)",
-            command=self._on_simulate_four_hours_elapsed,
-        ).pack(side=tk.RIGHT)
 
         # 3. Bottom Log & Alert View
         log_box = ttk.LabelFrame(
-            main_frame, text="4. Nhật ký Hoạt động & Cảnh báo (Logs / Alerts)", padding=8
+            main_frame, text="🖥 4. NHẬT KÝ HOẠT ĐỘNG & CẢNH BÁO (TERMINAL LOGS)", padding=8
         )
         log_box.pack(fill=tk.BOTH, expand=True)
 
         self.txt_log = scrolledtext.ScrolledText(
-            log_box, height=11, font=("Consolas", 10), state=tk.DISABLED, wrap=tk.WORD
+            log_box,
+            height=10,
+            font=("Consolas", 10),
+            state=tk.DISABLED,
+            wrap=tk.WORD,
+            bg=self.BG_INPUT,
+            fg=self.FG_PRIMARY,
+            insertbackground=self.ACCENT_CYAN,
+            relief=tk.FLAT,
+            padx=6,
+            pady=6,
         )
         self.txt_log.pack(fill=tk.BOTH, expand=True)
-        self.txt_log.tag_config("INFO", foreground="#004085")
-        self.txt_log.tag_config("SUCCESS", foreground="#155724")
-        self.txt_log.tag_config("WARNING", foreground="#b35900")
-        self.txt_log.tag_config("ERROR", foreground="#a71d2a")
+        self.txt_log.tag_config("INFO", foreground="#38bdf8")
+        self.txt_log.tag_config("SUCCESS", foreground="#34d399")
+        self.txt_log.tag_config("WARNING", foreground="#fbbf24")
+        self.txt_log.tag_config("ERROR", foreground="#fb7185")
 
     def _apply_ui_settings_to_config(self) -> bool:
         try:
@@ -403,6 +664,7 @@ class CopierGUI:
             self.tree_orders.insert(
                 "",
                 tk.END,
+                tags=(pos.side.value,),
                 values=(
                     pos.ticket,
                     "ĐANG MỞ",
@@ -419,6 +681,7 @@ class CopierGUI:
             self.tree_orders.insert(
                 "",
                 tk.END,
+                tags=(order.side.value,),
                 values=(
                     order.ticket,
                     "CHỜ LIMIT",
@@ -451,4 +714,4 @@ class CopierGUI:
         if events:
             self._refresh_orders_table()
         interval_ms = max(500, int(self.service.config.strategy.poll_interval_seconds * 1000))
-        self.root.after(interval_ms, self._schedule_background_loop)
+        self._after_id = self.root.after(interval_ms, self._schedule_background_loop)

@@ -66,7 +66,11 @@ def _parse_block(
 
     e1_raw = float(entry_sl_match.group("e1"))
     if e1_raw < 100.0 and reference_price is not None and reference_price >= 100.0:
-        e1 = resolve_shorthand_price(reference_price, e1_raw, must_be_above=None)
+        e1 = resolve_shorthand_price(
+            reference_price,
+            e1_raw,
+            must_be_above=(side is TradeSide.SELL),
+        )
     else:
         e1 = e1_raw
 
@@ -128,7 +132,11 @@ def resolve_signal_shorthand(signal: ParsedSignal, reference_price: float) -> Pa
         if reparsed is not None:
             return reparsed
 
-    e1 = resolve_shorthand_price(reference_price, signal.entries[0], must_be_above=None)
+    e1 = resolve_shorthand_price(
+        reference_price,
+        signal.entries[0],
+        must_be_above=(signal.side is TradeSide.SELL),
+    )
     entries = [e1]
     for raw_e in signal.entries[1:]:
         entries.append(resolve_shorthand_price(e1, raw_e, must_be_above=None))

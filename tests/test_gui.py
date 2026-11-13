@@ -11,9 +11,18 @@ from tests.test_parser import SAMPLE_TELEGRAM_MESSAGE
 
 
 class GUITestCase(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.root = tk.Tk()
+        cls.root.withdraw()
+
+    @classmethod
+    def tearDownClass(cls):
+        cls.root.destroy()
+
     def setUp(self):
-        self.root = tk.Tk()
-        self.root.withdraw()
+        for child in list(self.root.winfo_children()):
+            child.destroy()
         self.cfg = AppConfig()
         self.cfg.mt5.dry_run = True
         self.cfg.mt5.dry_run_bid = 3895.0
@@ -32,8 +41,12 @@ class GUITestCase(unittest.TestCase):
         )
 
     def tearDown(self):
+        if self.gui._after_id is not None:
+            try:
+                self.root.after_cancel(self.gui._after_id)
+            except tk.TclError:
+                pass
         self.storage.close()
-        self.root.destroy()
 
     def test_append_log_auto_scrolls_to_newest_message(self):
         for idx in range(40):
@@ -72,3 +85,16 @@ class GUITestCase(unittest.TestCase):
             self.gateway.get_pending_orders(self.cfg.mt5.magic_number),
             [],
         )
+
+    def test_trader_ui_layout_three_config_rows_uppercase_dry_run_and_compact_signal_box(self):
+        self.assertEqual(len(self.gui.config_rows), 3)
+        dry_run_text = self.gui.chk_dry_run.cget("text")
+        self.assertIn("DRY-RUN", dry_run_text)
+        self.assertEqual(dry_run_text, dry_run_text.upper())
+        self.assertEqual(
+            self.gui.chk_dry_run.nametowidget(self.gui.chk_dry_run.winfo_parent()),
+            self.gui.config_rows[0],
+        )
+        self.assertLessEqual(int(self.gui.txt_signal.cget("height")), 7)
+        self.assertLessEqual(int(self.gui.txt_signal.cget("width")), 38)
+

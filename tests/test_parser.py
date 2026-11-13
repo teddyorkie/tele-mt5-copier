@@ -82,8 +82,13 @@ class ParserTestCase(unittest.TestCase):
 13 08 SL 01 (Round 2)
 TP 25 48"""
 
-        for prefix, current_price in ((3800.0, 3820.0), (3900.0, 3920.0), (4000.0, 4020.0)):
-            with self.subTest(prefix=int(prefix // 100)):
+        for prefix, current_price in (
+            (3800.0, 3895.3),
+            (3800.0, 3820.0),
+            (3900.0, 3920.0),
+            (4000.0, 4020.0),
+        ):
+            with self.subTest(prefix=int(prefix // 100), current_price=current_price):
                 signals = parse_message(msg, reference_price=current_price)
                 self.assertEqual(len(signals), 1)
                 sig = signals[0]
@@ -92,4 +97,13 @@ TP 25 48"""
                 self.assertEqual(sig.entries, (prefix + 13.0, prefix + 8.0))
                 self.assertEqual(sig.sl, prefix + 1.0)
                 self.assertEqual(sig.tps, (prefix + 25.0, prefix + 48.0))
+
+        sell_shorthand = """SELL GOLD🍀🍀
+08 13 SL 20
+TP 98 76"""
+        sell_signals = parse_message(sell_shorthand, reference_price=3895.0)
+        self.assertEqual(len(sell_signals), 1)
+        self.assertEqual(sell_signals[0].entries, (3908.0, 3913.0))
+        self.assertEqual(sell_signals[0].sl, 3920.0)
+        self.assertEqual(sell_signals[0].tps, (3898.0, 3876.0))
 
