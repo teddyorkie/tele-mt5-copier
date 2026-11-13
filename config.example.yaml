@@ -1,0 +1,29 @@
+# Cấu hình mẫu cho tele-mt5-copier (Dùng chung cho cả Giai đoạn 1 GUI và Giai đoạn 2 Telegram Bot)
+mt5:
+  terminal_path: ""           # Để trống để tự tìm MT5 đang mở, hoặc điền đường dẫn tới terminal64.exe
+  magic_number: 20261113      # Mã định danh lệnh của bot trên MT5
+  deviation_points: 20
+  dry_run: true               # true = Chế độ giả lập an toàn, false = Gửi lệnh thật vào MT5
+  dry_run_bid: 3895.0         # Giá Bid giả lập khi bật dry_run
+  dry_run_ask: 3895.3         # Giá Ask giả lập khi bật dry_run
+  symbol_map:
+    GOLD: "XAUUSD"            # Đổi thành XAUUSDm, XAUUSD.pro... tùy sàn MT5 của bạn
+    XAUUSD: "XAUUSD"
+
+strategy:
+  lot_per_entry: 0.01         # Khối lượng mỗi lệnh Limit (0.01 lot x 2 điểm vào = 0.02 lot)
+  early_entry_offset: 0.5     # Vào sớm trước 0.5 giá (có thể chỉnh 0.0 -> 1.0)
+  tp_mode: "split"            # "split": Lệnh 1 -> TP1, Lệnh 2 -> TP2 | "tp1" | "tp2"
+  breakeven_trigger_price: 6.0  # Quy tắc +6 giá: tự động dời SL về đúng giá Entry (Break Even)
+  pending_expiry_hours: 4.0     # Tự động hủy lệnh chờ Limit chưa khớp sau 4 tiếng
+  max_sl_distance: 30.0         # Khoảng cách SL tối đa cho phép (tính theo giá vàng)
+  poll_interval_seconds: 1.0    # Chu kỳ kiểm tra dời SL và hủy lệnh quá hạn
+
+telegram:                     # Cấu hình dành sẵn cho Giai đoạn 2
+  api_id: 0
+  api_hash: ""
+  session_name: "tele_copier_session"
+  source_chat_ids: []
+  notify_chat: "me"
+
+db_path: "copier.db"
